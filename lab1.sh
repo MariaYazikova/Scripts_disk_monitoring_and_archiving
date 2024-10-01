@@ -13,3 +13,7 @@ fi
 
 USAGE=$(df "$DIR" | awk 'NR==2 {print $5}' | sed 's/%//')
 echo "Usage of '$DIR': $USAGE%"
+
+if [[$USAGE -ge 70]]; then
+    tar -cvzf /backup/small.tar.gz /log*
+    rm -f /log*
