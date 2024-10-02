@@ -34,19 +34,16 @@ echo "Usage percentage of '$DIR': $USAGE%"
 
 #проверка на превышение порога и архивирование
 if [[ $(echo "$USAGE >= $THRESHOLD" | bc) -eq 1 ]]; then
-    #проверка существования директории /backup и ее создание в противном случае
-    BACKUP="/backup"
-    if [ ! -d "$BACKUP" ]; then
-        echo "Directory '$BACKUP' doesn't exist. Creating..."
-        mkdir "$BACKUP" || {
-            echo "Can't create $BACKUP"
-            exit 1
-        }
-    fi
+    #определение домашней директории пользователя
+    HOME_DIR="$HOME"
 
-    #архивирование файлов
-    echo "Archiving files from '$DIR' to '$BACKUP/small.tar.gz'..."
-    tar -cvzf "$BACKUP/small.tar.gz" -C "$DIR" . || {
+    #имя архива с датой
+    DATE=$(date +%Y-%m-%d)
+    ARCHIVE="archieve_$DATE.tar.gz"
+
+    #архивирование файлов 
+    echo "Archiving files from '$DIR' to '$HOME_DIR/$ARCHIVE'..."
+    tar -cvzf "$HOME_DIR/$ARCHIVE" -C "$DIR" . || {
         echo "Can't archieve files from '$DIR'"
         exit 1
     }
