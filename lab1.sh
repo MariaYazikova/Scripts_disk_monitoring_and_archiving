@@ -21,7 +21,6 @@ if ! [[ "$THRESHOLD" =~ ^[0-9]+$ ]] || [ "$THRESHOLD" -lt 0 ] || [ "$THRESHOLD" 
     echo "Error: threshold percentage should be a number from 0 to 100"
     exit 1
 fi
-
 #получение размера папки и файловой системы, в которой она хранится
 DIR_SIZE=$(du -sk "$DIR" | awk '{print $1}')
 TOTAL_SIZE=$(df -k "$DIR" | awk 'NR==2 {print $2}')
@@ -31,28 +30,41 @@ USAGE=$(echo "scale=2; (100 *  $DIR_SIZE / $TOTAL_SIZE)" | bc)
 #вывод информации о размере папки в кб и ее заполненности в процентах
 echo "Size of '$DIR': $DIR_SIZE KB"
 echo "Usage percentage of '$DIR': $USAGE%"
+find "$DIR" -type f -printf '%TY-%Tm-%Td_%TH:%TM:%TS %p\n' | sort -t ' ' -k 1,1 -r
+#определение домашней директории пользователя
+HOME_DIR="$HOME"
 
+#имя архива с датой
+DATE=$(date +%Y-%m-%d_%H:%M:%S)
+ARCHIVE="archieve_$DATE.tar.gz"
 #проверка на превышение порога и архивирование
-if [[ $(echo "$USAGE >= $THRESHOLD" | bc) -eq 1 ]]; then
-    #определение домашней директории пользователя
-    HOME_DIR="$HOME"
+while [[ $USAGE -ge $THRESHOLD ]]; do
+    #инициализирует самый старый файл
+    FILE=$(find "$DIR" -type f)
 
-    #имя архива с датой
-    DATE=$(date +%Y-%m-%d)
-    ARCHIVE="archieve_$DATE.tar.gz"
+    #архивирование последнего файла 
+    echo "Archiving file '$FILE' to '$HOME_DIR/$ARCHIVE'..."
 
-    #архивирование файлов 
-    echo "Archiving files from '$DIR' to '$HOME_DIR/$ARCHIVE'..."
-    tar -cvzf "$HOME_DIR/$ARCHIVE" -C "$DIR" . || {
+    tar -rvzf "$HOME_DIR/$ARCHIVE" "$FILE" || {
         echo "Can't archieve files from '$DIR'"
-        exit 1
+        continue
     }
 
-    #удаление файлов из исходной папки в случае успешной архивации
-    echo "Removing files from '$DIR'..."
-    rm -rf "$DIR/"* || {
+    #удаление файла из исходной папки в случае успешной архивации
+    echo "Removing file '$FILE'..."
+    rm -f "$FILE" || {
         echo "Can't remove files from '$DIR'"
-        exit 1
+        continue
     }
-    echo "Files archieved and removed from '$DIR'"
-fi
+
+    echo "File archieved and removed from '$DIR'"
+    #вывод информации о размере папки в кб и ее заполненности в процентах
+    DIR_SIZE=$(du -sk "$DIR" | awk '{print $1}')
+    TOTAL_SIZE=$(df -k "$DIR" | awk 'NR==2 {print $2}')
+    #вычисление заполненности папки в процентах
+    USAGE=$(echo "scale=2; (100 *  $DIR_SIZE / $TOTAL_SIZE)" | bc)
+    echo "Size of '$DIR': $DIR_SIZE KB"
+    echo "Usage percentage of '$DIR': $USAGE%"
+    #небольшая пауза в 1 секунду перед следующей итерацией
+    sleep 1
+done
