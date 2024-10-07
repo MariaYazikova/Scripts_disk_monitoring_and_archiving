@@ -30,14 +30,16 @@ USAGE=$(echo "scale=2; (100 *  $DIR_SIZE / $TOTAL_SIZE)" | bc)
 #вывод информации о размере папки в кб и ее заполненности в процентах
 echo "Size of '$DIR': $DIR_SIZE KB"
 echo "Usage percentage of '$DIR': $USAGE%"
-#определение домашней директории пользователя
-HOME_DIR="$HOME"
+if [[ $(echo "$USAGE >= $THRESHOLD" | bc) -eq 1 ]]; then
+    #определение домашней директории пользователя
+    HOME_DIR="$HOME"
 
-#имя архива с датой
-DATE=$(date +%Y-%m-%d_%H:%M:%S)
-ARCHIVE="archieve_$DATE.tar.gz"
+    #имя архива с датой
+    DATE=$(date +%Y-%m-%d_%H:%M:%S)
+    ARCHIVE="archieve_$DATE.tar.gz"
+fi
 #проверка на превышение порога и архивирование
-while [[ $USAGE -ge $THRESHOLD ]]; do
+while [[ $(echo "$USAGE >= $THRESHOLD" | bc) -eq 1 ]]; do
     #инициализирует самый старый файл
     FILE=$(find "$DIR" -type f -printf '%TY-%Tm-%Td_%TH:%TM:%TS %p\n' | sort -t ' ' -k 1,1 | tail -n 1) 
 
