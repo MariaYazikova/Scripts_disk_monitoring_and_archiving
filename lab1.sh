@@ -2,6 +2,7 @@
 
 #проверка количества введеных аргументов
 if [ "$#" -ne 2 ]; then
+    echo "Error: not two arguments"
 	echo "Usage: $0 <directory_path> <threshold_percentage>"
 	exit 1
 fi
@@ -23,33 +24,40 @@ if ! [[ "$THRESHOLD" =~ ^[0-9]+$ ]] || [ "$THRESHOLD" -lt 0 ] || [ "$THRESHOLD" 
 fi
 
 #получение размера папки и файловой системы, в которой она хранится
-DIR_SIZE=$(du -sk "$DIR" | awk '{print $1}')
-TOTAL_SIZE=$(df -k "$DIR" | awk 'NR==2 {print $2}')
+DIR_SIZE=$(du -sm "$DIR" | awk '{print $1}')
+TOTAL_SIZE=$(df -m "$DIR" | awk 'NR==2 {print $2}')
 #вычисление заполненности папки в процентах
 USAGE=$(echo "scale=2; (100 *  $DIR_SIZE / $TOTAL_SIZE)" | bc)
 
 #вывод информации о размере папки в кб и ее заполненности в процентах
-echo "Size of '$DIR': $DIR_SIZE KB"
+echo "Size of '$DIR': $DIR_SIZE MB"
+echo "Total size: $TOTAL_SIZE MB"
 echo "Usage percentage of '$DIR': $USAGE%"
 
 #проверка на превышение порога
-if [[ $(echo "$USAGE >= $THRESHOLD" | bc) -eq 1 ]]; then
+if [[ $(echo "$USAGE > $THRESHOLD" | bc) -eq 1 ]]; then
+    echo "The threshold has been exceeded. Сreating an archive..."
     #определение домашней директории пользователя
     HOME_DIR="$HOME"
 
     #имя архива с датой
     DATE=$(date +%Y-%m-%d_%H:%M:%S)
-    ARCHIVE="archieve_$DATE.tar.gz"
+    ARCHIVE="archieve_$DATE.tar"
+    echo "The archieve '$ARCHIVE' has been created."
+    ARCHIVE_CREATED=true #флаг для отслеживания создания архива
+else 
+    echo "The threshold has not been exceeded. No archiving is created."
+    ARCHIVE_CREATED=false
 fi
 
 #архивирование
-while [[ $(echo "$USAGE >= $THRESHOLD" | bc) -eq 1 ]]; do
+while [[ $(echo "$USAGE > $THRESHOLD" | bc) -eq 1 ]]; do
     #инициализирует самый старый файл
-    FILE=$(find "$DIR" -type f -printf '%TY-%Tm-%Td_%TH:%TM:%TS %p\n' | sort -t ' ' -k 1,1 | tail -n 1) 
+    FILE=$(find "$DIR" -type f -printf '%T@ %p\n' | sort -n | awk '{print $2}' | head -n 1)
 
     #архивирование последнего файла 
-    echo "Archiving file '$FILE' to '$HOME_DIR/$ARCHIVE'..."
-    tar -rvzf "$HOME_DIR/$ARCHIVE" "$FILE" || {
+    echo "Archiving file '$FILE'..."
+    tar -rf "$HOME_DIR/$ARCHIVE" "$FILE" || {
         echo "Can't archieve file '$FILE' from '$DIR'"
         continue
     }
@@ -62,14 +70,22 @@ while [[ $(echo "$USAGE >= $THRESHOLD" | bc) -eq 1 ]]; do
     }
 
     #вывод об успешной архивации и удаления файла 
-    echo "File archieved and removed from '$DIR'"
-    #обновление переменных с размерами папки и файловой системы, в которой она находится
-    DIR_SIZE=$(du -sk "$DIR" | awk '{print $1}')
-    TOTAL_SIZE=$(df -k "$DIR" | awk 'NR==2 {print $2}')
-    #вычисление заполненности папки в процентах
+    echo "File archieved and removed from '$DIR'."
+
+    #обновление переменных с размерами
+    DIR_SIZE=$(du -sm "$DIR" | awk '{print $1}')
+    TOTAL_SIZE=$(df -m "$DIR" | awk 'NR==2 {print $2}')
     USAGE=$(echo "scale=2; (100 *  $DIR_SIZE / $TOTAL_SIZE)" | bc)
-    echo "Size of '$DIR': $DIR_SIZE KB"
+    echo "Size of '$DIR': $DIR_SIZE MB"
     echo "Usage percentage of '$DIR': $USAGE%"
+
     #небольшая пауза в 1 секунду перед следующей итерацией
     sleep 1
 done
+
+if [ "$ARCHIVE_CREATED" = true ]; then
+    echo "Compressing archieve '$ARCHIVE'..."
+    gzip "$HOME_DIR/$ARCHIVE"
+    echo "Archieve compressed to '$ARCHIVE.gz'."
+    echo "File archiving from '$DIR' to '$HOME_DIR/$ARCHIVE' is complete."
+fi
