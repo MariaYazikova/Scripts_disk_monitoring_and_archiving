@@ -2,7 +2,7 @@
 
 #проверка количества введеных аргументов
 if [ "$#" -ne 2 ]; then
-    echo "Error: not two arguments"
+    echo "Error: not two arguments."
 	echo "Usage: $0 <directory_path> <threshold_percentage>"
 	exit 1
 fi
@@ -13,13 +13,13 @@ THRESHOLD="$2"
 
 #проверка сущестования директории
 if [ ! -d "$DIR" ]; then
-	echo "Error: this directory path is not a folder or does not exist"
+	echo "Error: this directory path is not a folder or does not exist."
 	exit 1
 fi
 
 #проверка порога на число от 0 до 100
 if ! [[ "$THRESHOLD" =~ ^[0-9]+$ ]] || [ "$THRESHOLD" -lt 0 ] || [ "$THRESHOLD" -gt 100 ]; then
-    echo "Error: threshold percentage should be a number from 0 to 100"
+    echo "Error: threshold percentage should be a number from 0 to 100."
     exit 1
 fi
 
@@ -83,6 +83,7 @@ while [[ $(echo "$USAGE > $THRESHOLD" | bc) -eq 1 ]]; do
     sleep 1
 done
 
+#сжатие архива
 if [ "$ARCHIVE_CREATED" = true ]; then
     echo "Compressing archieve '$ARCHIVE'..."
     gzip "$HOME_DIR/$ARCHIVE"
