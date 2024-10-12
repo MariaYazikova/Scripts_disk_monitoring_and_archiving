@@ -9,8 +9,9 @@ fi
 
 #создание переменных с папкой и порога в процентах
 DIR="$1"
+export DIR
+./chapter.sh
 THRESHOLD="$2"
-
 #проверка сущестования директории
 if [ ! -d "$DIR" ]; then
 	echo "Error: this directory path is not a folder or does not exist."
