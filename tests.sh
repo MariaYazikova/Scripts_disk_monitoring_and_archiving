@@ -2,6 +2,7 @@
 
 BASE_SCRIPT='./lab1.sh' #путь к основному скрипту
 TEST="./test_dir" #путь к тестовой папке
+CHAPTER='./chapter.sh' #путь к разделам
 mkdir -p "$TEST" #создание тестовой папки
 
 #функция очистки тестовой папки и размонтирование раздела
@@ -49,6 +50,7 @@ test_threshold_exceeded() {
     echo "Running the TEST №1..."
     START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
     creating_files
+    "$CHAPTER" 1
     "$BASE_SCRIPT" "$TEST" 80
 
     check_creation_of_archive
@@ -59,7 +61,9 @@ test_full_threshold_exceeded() {
     echo "Running the TEST №2..." 
     START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
     creating_files
+    "$CHAPTER" 2
     "$BASE_SCRIPT" "$TEST" 0
+
 
     check_creation_of_archive
 }
@@ -69,6 +73,7 @@ test_no_threshold_exceeded() {
     echo "Running the TEST №3..."
     START_TIME=$(date +"%Y-%m-%d %H:%M:%S")
     creating_files
+    "$CHAPTER" 3
     "$BASE_SCRIPT" "$TEST" 100
 
     check_no_creation_of_archive
@@ -78,6 +83,7 @@ test_no_threshold_exceeded() {
 test_invalid_directory() {
     echo "Running the TEST №4..."
     creating_files
+    "$CHAPTER" 4
 
     OUTPUT=$("$BASE_SCRIPT" "./invalid_dir" 70 2>&1)
     if [[ "$OUTPUT" == *"Error: this directory path is not a folder or does not exist."* ]]; then
@@ -91,6 +97,7 @@ test_invalid_directory() {
 test_invaid_threshold1() {
     echo "Running the TEST №5..."
     creating_files
+    "$CHAPTER" 5
 
     OUTPUT=$("$BASE_SCRIPT" "$TEST" 101 2>&1)
     if [[ "$OUTPUT" == *"Error: threshold percentage should be a number from 0 to 100."* ]]; then
@@ -105,6 +112,7 @@ test_invaid_threshold1() {
 test_invaid_threshold2() {
     echo "Running the TEST №6..."
     creating_files
+    "$CHAPTER" 6
 
     OUTPUT=$("$BASE_SCRIPT" "$TEST" -1 2>&1)
     if [[ "$OUTPUT" == *"Error: threshold percentage should be a number from 0 to 100."* ]]; then
@@ -118,6 +126,7 @@ test_invaid_threshold2() {
 test_invalid_count_of_args1() {
     echo "Running the TEST №7..."
     creating_files
+    "$CHAPTER" 7
     
     OUTPUT=$("$BASE_SCRIPT" "$TEST" 2>&1)
     if [[ "$OUTPUT" == *"Error: not two arguments."* ]]; then
@@ -132,6 +141,7 @@ test_invalid_count_of_args1() {
 test_invalid_count_of_args2() {
     echo "Running the TEST №8..."
     creating_files
+    "$CHAPTER" 8
     
     OUTPUT=$("$BASE_SCRIPT" "$TEST" 22 "arg" 2>&1)
     if [[ "$OUTPUT" == *"Error: not two arguments."* ]]; then
