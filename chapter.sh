@@ -1,27 +1,20 @@
-
 #!/bin/bash
-
-BASE_SCRIPT='./lab1.sh' 
-NUMBER=$1 #принимает номер раздела
-FS_TYPE="ext4" #тип файловой системы
+BASE_SCRIPT="./lab1.sh"
+FILE="data.img"
 MOUNT="/mnt/data" #точка монтирования
+#проверка установки fuse
+if ! dpkg -l | grep -q fuse; then
+        echo "FUSE isn't installed."
+        echo "To install use commands: "
+        echo "sudo apt update"
+        echo "sudo apt upgrade"
+        echo "sudo apt install fuse3"
+        echo "sudo apt-get install sshfs"
+        exit 1
+fi
 #создание раздела
-sudo fdisk "$DIR" << EOF
-n
-p
-$NUMBER
-2048
-+2048
-w
-EOF
+dd if=/dev/zero of="$FILE" bs=1M count=100 #размер файла
 #форматирование раздела
-sudo mkfs.ext4 $DIR > /dev/null 2>&1
-#создание точки монтирования
-sudo mkdir -p "$MOUNT"
-#монтирование раздела
-sudo mount "$DIR"$NUMBER "$MOUNT"
-#добавление записи в fstab
-echo "$DIR" "$MOUNT"$NUMBER" "$FS_TYPE" defaults 0 2" | sudo tee -a /etc/fstab 
-#проверка монтирования
-df -h | grep "$MOUNT"
-echo "Раздел успешно создан и смонтирован!"
+mkfs.ext4 "$FILE" > /dev/null 2>&1
+mkdir -p  "$MOUNT"
+fuse2fs "$FILE" "$MOUNT" > /dev/null 2>&1
