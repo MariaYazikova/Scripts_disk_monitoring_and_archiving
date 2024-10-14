@@ -1,6 +1,6 @@
 #!/bin/bash
 BASE_SCRIPT="./lab1.sh"
-FILE="data.img"
+FILE="archieve_*.tar.gz"
 MOUNT="/mnt/data" #точка монтирования
 #проверка установки fuse
 if ! dpkg -l | grep -q fuse; then
@@ -20,7 +20,7 @@ if mount | grep "$MOUNT" > /dev/null; then
         fi
 fi
 #создание раздела
-if [! -f "$FILE"]; then
+if [ ! -f "$FILE" ]; then
         sudo dd if=/dev/zero of="$FILE" bs=1M count=2048 #размер файла
         #форматирование раздела
         mkfs.ext4 "$FILE" > /dev/null 2>&1
