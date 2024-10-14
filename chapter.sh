@@ -1,5 +1,4 @@
 #!/bin/bash
-
 FILE="data.img"
 MOUNT="/mnt/data" #точка монтирования
 #проверка установки fuse
