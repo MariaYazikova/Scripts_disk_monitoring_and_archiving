@@ -1,5 +1,4 @@
 #!/bin/bash
-BASE_SCRIPT="./lab1.sh"
 FILE="archieve_*.tar.gz"
 MOUNT="/mnt/data" #точка монтирования
 #проверка установки fuse
