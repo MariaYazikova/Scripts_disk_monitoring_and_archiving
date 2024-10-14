@@ -12,9 +12,18 @@ if ! dpkg -l | grep -q fuse; then
         echo "sudo apt-get install sshfs"
         exit 1
 fi
+#удаление раздела
+if mount | grep "$MOUNT" > /dev/null; then
+        sudo umount "$MOUNT"
+        if [ -f "$FILE" ]; then
+                sudo rm "$FILE"
+        fi
+fi
 #создание раздела
-dd if=/dev/zero of="$FILE" bs=1M count=100 #размер файла
-#форматирование раздела
-mkfs.ext4 "$FILE" > /dev/null 2>&1
-mkdir -p  "$MOUNT"
-fuse2fs "$FILE" "$MOUNT" > /dev/null 2>&1
+if [! -f "$FILE"]; then
+        sudo dd if=/dev/zero of="$FILE" bs=1M count=2048 #размер файла
+        #форматирование раздела
+        mkfs.ext4 "$FILE" > /dev/null 2>&1
+        mkdir -p  "$MOUNT"
+        fuse2fs "$FILE" "$MOUNT" > /dev/null 2>&1
+fi
