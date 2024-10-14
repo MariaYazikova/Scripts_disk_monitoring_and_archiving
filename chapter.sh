@@ -1,4 +1,5 @@
 #!/bin/bash
+
 FILE="data.img"
 MOUNT="/mnt/data" #точка монтирования
 #проверка установки fuse
@@ -19,7 +20,7 @@ if mount | grep "$MOUNT" > /dev/null; then
         fi
 fi
 #создание раздела
-if [! -f "$FILE"]; then
+if [ ! -f "$FILE" ]; then
         sudo dd if=/dev/zero of="$FILE" bs=1M count=2048 #размер файла
         #форматирование раздела
         mkfs.ext4 "$FILE" > /dev/null 2>&1
