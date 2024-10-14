@@ -1,5 +1,5 @@
 #!/bin/bash
-FILE="archieve_*.tar.gz"
+FILE="data.img"
 MOUNT="/mnt/data" #точка монтирования
 #проверка установки fuse
 if ! dpkg -l | grep -q fuse; then
