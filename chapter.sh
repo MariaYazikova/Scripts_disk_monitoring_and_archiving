@@ -1,4 +1,5 @@
 #!/bin/bash
+
 FILE="data.img"
 MOUNT="/mnt/data" #точка монтирования
 #проверка установки fuse
@@ -25,4 +26,6 @@ if [ ! -f "$FILE" ]; then
         mkfs.ext4 "$FILE" > /dev/null 2>&1
         mkdir -p  "$MOUNT"
         fuse2fs "$FILE" "$MOUNT" > /dev/null 2>&1
+        SIZE=$(df -h "$MOUNT" | grep "$MOUNT" | awk '{print $2}')
+        export SIZE
 fi
