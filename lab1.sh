@@ -10,6 +10,7 @@ fi
 #создание переменных с папкой и порога в процентах
 DIR="$1"
 THRESHOLD="$2"
+
 #проверка сущестования директории
 if [ ! -d "$DIR" ]; then
 	echo "Error: this directory path is not a folder or does not exist."
@@ -22,13 +23,18 @@ if ! [[ "$THRESHOLD" =~ ^[0-9]+$ ]] || [ "$THRESHOLD" -lt 0 ] || [ "$THRESHOLD" 
     exit 1
 fi
 
-#получение размера папки и файловой системы, в которой она хранится
+#запуск скрипта с монтированием раздела
+CHAPTER_SCRIPT="./chapter.sh"
+IMAGE_FILE="$HOME/data.img"
+MOUNT_DIR="$HOME/data_mount"
+"$CHAPTER_SCRIPT" "$IMAGE_FILE" "$MOUNT_DIR"
+
+#вычисление заполненности папки в прцоентах
 DIR_SIZE=$(du -sm "$DIR" | awk '{print $1}')
-TOTAL_SIZE=$(df -m "$DIR" | awk 'NR==2 {print $2}')
-#вычисление заполненности папки в процентах
+TOTAL_SIZE=$(df -m "$MOUNT_DIR" | awk 'NR==2 {print $2}')
 USAGE=$(echo "scale=2; (100 *  $DIR_SIZE / $TOTAL_SIZE)" | bc)
 
-#вывод информации о размере папки в кб и ее заполненности в процентах
+#вывод информации о размере папки в мб и ее заполненности в процентах
 echo "Size of '$DIR': $DIR_SIZE MB"
 echo "Total size: $TOTAL_SIZE MB"
 echo "Usage percentage of '$DIR': $USAGE%"
@@ -54,6 +60,12 @@ while [[ $(echo "$USAGE > $THRESHOLD" | bc) -eq 1 ]]; do
     #инициализирует самый старый файл
     FILE=$(find "$DIR" -type f -printf '%T@ %p\n' | sort -n | awk '{print $2}' | head -n 1)
 
+    #проверка на сущестовавание файла, который можно архивировать
+    if [ -z "$FILE" ]; then
+        echo "No more files to archive."
+        break
+    fi
+
     #архивирование последнего файла 
     echo "Archiving file '$FILE'..."
     tar -rf "$HOME_DIR/$ARCHIVE" "$FILE" || {
@@ -73,7 +85,7 @@ while [[ $(echo "$USAGE > $THRESHOLD" | bc) -eq 1 ]]; do
 
     #обновление переменных с размерами
     DIR_SIZE=$(du -sm "$DIR" | awk '{print $1}')
-    TOTAL_SIZE=$(df -m "$DIR" | awk 'NR==2 {print $2}')
+    TOTAL_SIZE=$(df -m "$MOUNT_DIR" | awk 'NR==2 {print $2}')
     USAGE=$(echo "scale=2; (100 *  $DIR_SIZE / $TOTAL_SIZE)" | bc)
     echo "Size of '$DIR': $DIR_SIZE MB"
     echo "Usage percentage of '$DIR': $USAGE%"
